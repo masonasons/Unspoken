@@ -2,6 +2,7 @@
 # By Bryan Smart (bryansmart@bryansmart.com) and Austin Hicks (camlorn38@gmail.com)
 # Updated to use Synthizer by Mason Armstrong (mason@masonasons.me)
 
+import atexit
 import os
 import os.path
 import sys
@@ -76,6 +77,11 @@ sounds = dict() # For holding instances in RAM.
 #taken from Stackoverflow. Don't ask.
 def clamp(my_value, min_value, max_value):
 	return max(min(my_value, max_value), min_value)
+
+def shutdown():
+	synthizer.shutdown()
+
+atexit.register(shutdown)
 
 class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 
@@ -178,10 +184,9 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			sounds[role].source.gain=self._compute_volume()
 			sounds[role].play()
 
-#This doesn't work.
-#	def event_becomeNavigatorObject(self, obj, nextHandler):
-#		self.play_object(obj)
-#		nextHandler()
+	def event_becomeNavigatorObject(self, obj, nextHandler, isFocus=False):
+		self.play_object(obj)
+		nextHandler()
 
 	def event_gainFocus(self, obj, nextHandler):
 		self.play_object(obj)
@@ -194,8 +199,4 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 		nextHandler()
 
 	def terminate(self):
-		for i, j in sounds.items():
-			j.stop()
-			j.close()
-		synthizer.shutdown()
 		addonGui.terminate()
