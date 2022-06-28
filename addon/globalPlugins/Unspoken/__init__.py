@@ -12,7 +12,7 @@ import NVDAObjects
 import config
 import speech
 import controlTypes
-import sayAllHandler
+from speech import sayAll
 from logHandler import log
 from . import addonGui
 log.debug("Initializing Synthizer", exc_info=True)
@@ -101,8 +101,8 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 		self.context.distance_model = self.context.distance_model.NONE
 		self.make_sound_objects()
 		# Hook to keep NVDA from announcing roles.
-		self._NVDA_getSpeechTextForProperties = speech.getPropertiesSpeech
-		speech.getPropertiesSpeech = self._hook_getSpeechTextForProperties
+		self._NVDA_getSpeechTextForProperties = speech.speech.getPropertiesSpeech
+		speech.speech.getPropertiesSpeech = self._hook_getSpeechTextForProperties
 		self._previous_mouse_object = None
 		self._last_played_object = None
 		self._last_played_time = 0
@@ -122,13 +122,13 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			sounds[key] = sound_object
 
 	def shouldNukeRoleSpeech(self):
-		if config.conf["unspoken"]["sayAll"] and sayAllHandler.isRunning():
+		if config.conf["unspoken"]["sayAll"] and sayAll.isRunning():
 			return False
 		if config.conf["unspoken"]["speakRoles"]:
 			return False
 		return True
 
-	def _hook_getSpeechTextForProperties(self, reason=NVDAObjects.controlTypes.REASON_QUERY, *args, **kwargs):
+	def _hook_getSpeechTextForProperties(self, reason=NVDAObjects.controlTypes.OutputReason.QUERY, *args, **kwargs):
 		role = kwargs.get('role', None)
 		if role:
 			if (role in sounds and self.shouldNukeRoleSpeech()):
@@ -140,7 +140,7 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 	def _compute_volume(self):
 		if not config.conf["unspoken"]["volumeAdjust"]:
 			return 1.0
-		driver=speech.getSynth()
+		driver=speech.speech.getSynth()
 		volume = getattr(driver, 'volume', 100)/100.0 #nvda reports as percent.
 		volume=clamp(volume, 0.0, 1.0)
 		return volume

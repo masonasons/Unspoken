@@ -19,15 +19,15 @@ addon_info = {
 	# Translators: Long description to be shown for this add-on on add-on information from add-ons manager
 	"addon_description" : _("""Adds 3D audio for controls and replaces control messages."""),
 	# version
-	"addon_version" : "0.6",
+	"addon_version" : "0.7",
 	# Author(s)
 	"addon_author" : "Camlorn <camlorn38@gmail.com>, Bryan Smart< Bryansmart@bryansmart.com>",
 	# URL for the add-on documentation support
 	"addon_url" : "http://camlorn.net/pages/unspoken.html",
 	# Documentation file name
 	"addon_docFileName" : "readme.html",
-	"addon_minimum_nvda_version" : "2019.3",
-	"addon_last_tested_nvda_version" : "2020.4",
+	"addon_minimum_nvda_version" : "2021.1",
+	"addon_last_tested_nvda_version" : "2022.1",
 }
 
 
