@@ -92,13 +92,15 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			"sayAll" : "boolean(default=False)",
 			"speakRoles" : "boolean(default=False)",
 			"noSounds" : "boolean(default=False)",
+			"HRTF" : "boolean(default=False)",
 			"volumeAdjust" : "boolean(default=True)",
 		}
 		log.debug("Creating Synthizer context", exc_info=True)
 		self.context = synthizer.Context()
 #We don't want it changing the volume of sounds that are far away from the listening point (The center of the screen).
 		log.debug("Setting Synthizer context distance model to NONE", exc_info=True)
-		self.context.distance_model = self.context.distance_model.NONE
+		self.context.default_panner_strategy.value=synthizer.PannerStrategy.STEREO if not config.conf['unspoken']['HRTF'] else synthizer.PannerStrategy.HRTF
+		self.context.default_distance_model.value = synthizer.DistanceModel.NONE
 		self.make_sound_objects()
 		# Hook to keep NVDA from announcing roles.
 		self._NVDA_getSpeechTextForProperties = speech.speech.getPropertiesSpeech
@@ -179,9 +181,9 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			#In theory, this can be made faster if we remember which is last, but that shouldn't matter here
 			for i, j in sounds.items():
 				j.stop()
-			sounds[role].generator.position = 0.0
-			sounds[role].source.position = (angle_x, angle_y, 0)
-			sounds[role].source.gain=self._compute_volume()
+			sounds[role].generator.playback_position.value = 0.0
+			sounds[role].source.position.value = (angle_x, angle_y, 0)
+			sounds[role].source.gain.value=self._compute_volume()
 			sounds[role].play()
 
 	def event_becomeNavigatorObject(self, obj, nextHandler, isFocus=False):

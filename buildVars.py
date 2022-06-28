@@ -19,7 +19,7 @@ addon_info = {
 	# Translators: Long description to be shown for this add-on on add-on information from add-ons manager
 	"addon_description" : _("""Adds 3D audio for controls and replaces control messages."""),
 	# version
-	"addon_version" : "0.7",
+	"addon_version" : "0.8",
 	# Author(s)
 	"addon_author" : "Camlorn <camlorn38@gmail.com>, Bryan Smart< Bryansmart@bryansmart.com>",
 	# URL for the add-on documentation support

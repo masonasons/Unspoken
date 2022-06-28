@@ -11,6 +11,8 @@ class SettingsPanel(gui.SettingsPanel):
 		self.sayAllCheckBox.SetValue(config.conf["unspoken"]["sayAll"])
 		self.speakRolesCheckBox = settingsSizer.addItem(wx.CheckBox(self, label="&Speak object roles"))
 		self.speakRolesCheckBox.SetValue(config.conf["unspoken"]["speakRoles"])
+		self.HRTFCheckBox = settingsSizer.addItem(wx.CheckBox(self, label="Enable &HRTF (Requires NVDA Restart)"))
+		self.HRTFCheckBox.SetValue(config.conf["unspoken"]["HRTF"])
 		self.noSoundsCheckBox = settingsSizer.addItem(wx.CheckBox(self, label="Don't &play sounds for roles"))
 		self.noSoundsCheckBox.SetValue(config.conf["unspoken"]["noSounds"])
 		self.volumeCheckBox = settingsSizer.addItem(wx.CheckBox(self, label="Automatically adjust sounds with speech &volume"))
@@ -19,11 +21,12 @@ class SettingsPanel(gui.SettingsPanel):
 	def postInit(self):
 		self.sayAllCheckBox.SetFocus()
 
-	def onSave(self, evt):
+	def onSave(self):
 		if self.noSoundsCheckBox.IsChecked() and not self.speakRolesCheckBox.IsChecked():
 			gui.messageBox("Disabling both sounds and  speaking is not allowed. NVDA will not say roles like button and checkbox, and sounds won't play either. Please change one of these settings", "Error")
 			return
 		config.conf["unspoken"]["sayAll"] = self.sayAllCheckBox.IsChecked()
 		config.conf["unspoken"]["speakRoles"] = self.speakRolesCheckBox.IsChecked()
+		config.conf["unspoken"]["HRTF"] = self.HRTFCheckBox.IsChecked()
 		config.conf["unspoken"]["noSounds"] = self.noSoundsCheckBox.IsChecked()
 		config.conf["unspoken"]["volumeAdjust"] = self.volumeCheckBox.IsChecked()

@@ -23,7 +23,7 @@ class sound_buffer_manager(object):
 #Our sound is already loaded into a buffer, so return it.
 				return i.buffer
 #Our sound is not loaded, so load it, add the buffer to the buffers list and return it.
-		tmp=synthizer.Buffer.from_stream("file", filename)
+		tmp=synthizer.Buffer.from_file(filename)
 		self.buffers.append(sound_buffer(filename,tmp))
 		return tmp
 
@@ -53,7 +53,7 @@ class sound3d(object):
 			self.generator=synthizer.BufferGenerator(self.context)
 			self.buffer=gsbm.buffer(filename)
 			self.length=self.buffer.get_length_in_seconds()
-			self.generator.buffer=self.buffer
+			self.generator.buffer.value=self.buffer
 			if self.type=="3d":
 				self.source = synthizer.Source3D(self.context)
 			elif self.type=="direct":
@@ -79,7 +79,7 @@ class sound3d(object):
 	def play(self):
 		if not self.is_active():
 			return False
-		self.generator.looping=False
+		self.generator.looping.value=False
 		self.source.add_generator(self.generator)
 		self.paused=False
 		self.looping=False
@@ -88,7 +88,7 @@ class sound3d(object):
 	def play_looped(self):
 		if not self.is_active():
 			return False
-		self.generator.looping=True
+		self.generator.looping.value=True
 		self.source.add_generator(self.generator)
 		self.paused=False
 		self.looping=True
@@ -116,18 +116,18 @@ class sound3d(object):
 		if not self.is_active():
 			return False
 		self.source.remove_generator(self.generator)
-		self.generator.position=0
+		self.generator.playback_position.value=0
 		self.paused=False
 
 	def get_position(self):
 		if not self.is_active():
 			return -1
-		return self.generator.position
+		return self.generator.playback_position
 
 	def set_position(self, position):
 		if not self.is_active():
 			return False
-		self.generator.position=position
+		self.generator.playback_position=position
 		return True
 
 	def get_volume(self):
@@ -174,7 +174,7 @@ class sound3d(object):
 	def is_active(self):
 		if self.source!=None:
 			try:
-				pb=self.generator.position
+				pb=self.generator.playback_position.value
 			except: return False
 			return True
 		return False
