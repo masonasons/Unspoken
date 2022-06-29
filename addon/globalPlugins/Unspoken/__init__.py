@@ -123,7 +123,7 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			sound_object = sound.sound3d("3d",sound.context)
 			log.debug("Loading "+path, exc_info=True)
 			sound_object.load(path)
-			sound.context.config_route(sound_object.source, sound.reverb)
+			if config.conf["unspoken"]["Reverb"]==True: sound.context.config_route(sound_object.source, sound.reverb)
 			sounds[key] = sound_object
 
 	def shouldNukeRoleSpeech(self):
