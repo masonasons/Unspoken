@@ -78,11 +78,6 @@ sounds = dict() # For holding instances in RAM.
 def clamp(my_value, min_value, max_value):
 	return max(min(my_value, max_value), min_value)
 
-def shutdown():
-	synthizer.shutdown()
-
-atexit.register(shutdown)
-
 class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 
 	def __init__(self, *args, **kwargs):
@@ -209,4 +204,4 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 		nextHandler()
 
 	def terminate(self):
-		addonGui.terminate()
+		synthizer.shutdown()
