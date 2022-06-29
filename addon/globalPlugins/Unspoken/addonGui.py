@@ -13,6 +13,12 @@ class SettingsPanel(gui.SettingsPanel):
 		self.speakRolesCheckBox.SetValue(config.conf["unspoken"]["speakRoles"])
 		self.HRTFCheckBox = settingsSizer.addItem(wx.CheckBox(self, label="Enable &HRTF (Requires NVDA Restart)"))
 		self.HRTFCheckBox.SetValue(config.conf["unspoken"]["HRTF"])
+		self.ReverbCheckBox = settingsSizer.addItem(wx.CheckBox(self, label="Enable &Reverb (Requires NVDA Restart)"))
+		self.ReverbCheckBox.SetValue(config.conf["unspoken"]["Reverb"])
+		self.ReverbLevelSlider = settingsSizer.addItem(wx.Slider(self, name="Reverb Level"))
+		self.ReverbLevelSlider.SetValue(config.conf["unspoken"]["ReverbLevel"]*100)
+		self.ReverbTimeSlider = settingsSizer.addItem(wx.Slider(self, name="Reverb Time"))
+		self.ReverbTimeSlider.SetValue(config.conf["unspoken"]["ReverbTime"]*100)
 		self.noSoundsCheckBox = settingsSizer.addItem(wx.CheckBox(self, label="Don't &play sounds for roles"))
 		self.noSoundsCheckBox.SetValue(config.conf["unspoken"]["noSounds"])
 		self.volumeCheckBox = settingsSizer.addItem(wx.CheckBox(self, label="Automatically adjust sounds with speech &volume"))
@@ -28,5 +34,8 @@ class SettingsPanel(gui.SettingsPanel):
 		config.conf["unspoken"]["sayAll"] = self.sayAllCheckBox.IsChecked()
 		config.conf["unspoken"]["speakRoles"] = self.speakRolesCheckBox.IsChecked()
 		config.conf["unspoken"]["HRTF"] = self.HRTFCheckBox.IsChecked()
+		config.conf["unspoken"]["Reverb"] = self.ReverbCheckBox.IsChecked()
+		config.conf["unspoken"]["ReverbLevel"] = self.ReverbLevelSlider.GetValue()/100
+		config.conf["unspoken"]["ReverbTime"] = self.ReverbTimeSlider.GetValue()/100
 		config.conf["unspoken"]["noSounds"] = self.noSoundsCheckBox.IsChecked()
 		config.conf["unspoken"]["volumeAdjust"] = self.volumeCheckBox.IsChecked()

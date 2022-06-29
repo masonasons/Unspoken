@@ -92,11 +92,20 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			"sayAll" : "boolean(default=False)",
 			"speakRoles" : "boolean(default=False)",
 			"noSounds" : "boolean(default=False)",
-			"HRTF" : "boolean(default=False)",
+			"HRTF" : "boolean(default=True)",
 			"volumeAdjust" : "boolean(default=True)",
+			"Reverb" : "boolean(default=True)",
+			"ReverbLevel" : "float(default=1.0)",
+			"ReverbTime" : "float(default=0.2)",
 		}
 		log.debug("Creating Synthizer context", exc_info=True)
 		self.context = synthizer.Context()
+		self.reverb = synthizer.GlobalFdnReverb(self.context)
+		self.reverb.filter_input.value=synthizer.BiquadConfig.design_identity()
+		self.reverb.gain.value=config.conf['unspoken']['ReverbLevel']
+		self.reverb.mean_free_path.value=0.01
+		self.reverb.t60.value=config.conf['unspoken']['ReverbTime']
+		self.reverb.late_reflections_delay.value=0
 #We don't want it changing the volume of sounds that are far away from the listening point (The center of the screen).
 		log.debug("Setting Synthizer context distance model to NONE", exc_info=True)
 		self.context.default_panner_strategy.value=synthizer.PannerStrategy.STEREO if not config.conf['unspoken']['HRTF'] else synthizer.PannerStrategy.HRTF
@@ -121,6 +130,7 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			sound_object = sound.sound3d("3d",self.context)
 			log.debug("Loading "+path, exc_info=True)
 			sound_object.load(path)
+			self.context.config_route(sound_object.source, self.reverb)
 			sounds[key] = sound_object
 
 	def shouldNukeRoleSpeech(self):
