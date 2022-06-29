@@ -1,3 +1,4 @@
+from . import sound, synthizer
 import wx
 import config
 import gui
@@ -11,7 +12,7 @@ class SettingsPanel(gui.SettingsPanel):
 		self.sayAllCheckBox.SetValue(config.conf["unspoken"]["sayAll"])
 		self.speakRolesCheckBox = settingsSizer.addItem(wx.CheckBox(self, label="&Speak object roles"))
 		self.speakRolesCheckBox.SetValue(config.conf["unspoken"]["speakRoles"])
-		self.HRTFCheckBox = settingsSizer.addItem(wx.CheckBox(self, label="Enable &HRTF (Requires NVDA Restart)"))
+		self.HRTFCheckBox = settingsSizer.addItem(wx.CheckBox(self, label="Enable &HRTF"))
 		self.HRTFCheckBox.SetValue(config.conf["unspoken"]["HRTF"])
 		self.ReverbCheckBox = settingsSizer.addItem(wx.CheckBox(self, label="Enable &Reverb (Requires NVDA Restart)"))
 		self.ReverbCheckBox.SetValue(config.conf["unspoken"]["Reverb"])
@@ -33,9 +34,12 @@ class SettingsPanel(gui.SettingsPanel):
 			return
 		config.conf["unspoken"]["sayAll"] = self.sayAllCheckBox.IsChecked()
 		config.conf["unspoken"]["speakRoles"] = self.speakRolesCheckBox.IsChecked()
+		sound.context.default_panner_strategy.value=synthizer.PannerStrategy.STEREO if not config.conf['unspoken']['HRTF'] else synthizer.PannerStrategy.HRTF
 		config.conf["unspoken"]["HRTF"] = self.HRTFCheckBox.IsChecked()
 		config.conf["unspoken"]["Reverb"] = self.ReverbCheckBox.IsChecked()
 		config.conf["unspoken"]["ReverbLevel"] = self.ReverbLevelSlider.GetValue()/100
+		sound.reverb.gain.value=config.conf["unspoken"]["ReverbLevel"]
 		config.conf["unspoken"]["ReverbTime"] = self.ReverbTimeSlider.GetValue()/100
+		sound.reverb.t60.value=config.conf["unspoken"]["ReverbTime"]
 		config.conf["unspoken"]["noSounds"] = self.noSoundsCheckBox.IsChecked()
 		config.conf["unspoken"]["volumeAdjust"] = self.volumeCheckBox.IsChecked()
