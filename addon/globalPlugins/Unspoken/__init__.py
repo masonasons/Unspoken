@@ -153,7 +153,7 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 		driver=speech.speech.getSynth()
 		volume = getattr(driver, 'volume', 100)/100.0 #nvda reports as percent.
 		volume=clamp(volume, 0.0, 1.0)
-		return volume
+		return volume if not config.conf['unspoken']['HRTF'] else volume+0.25
 
 	def play_object(self, obj):
 		if config.conf["unspoken"]["noSounds"]:
