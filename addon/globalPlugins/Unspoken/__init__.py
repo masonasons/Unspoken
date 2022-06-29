@@ -12,7 +12,7 @@ import NVDAObjects
 import config
 import speech
 import controlTypes
-from speech import sayAll
+from speech.sayAll import SayAllHandler
 from logHandler import log
 from . import addonGui
 log.debug("Initializing Synthizer", exc_info=True)
@@ -132,7 +132,7 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			sounds[key] = sound_object
 
 	def shouldNukeRoleSpeech(self):
-		if config.conf["unspoken"]["sayAll"] and sayAll.isRunning():
+		if config.conf["unspoken"]["sayAll"] and SayAllHandler.isRunning():
 			return False
 		if config.conf["unspoken"]["speakRoles"]:
 			return False
