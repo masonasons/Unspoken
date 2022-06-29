@@ -99,17 +99,15 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			"ReverbTime" : "float(default=0.2)",
 		}
 		log.debug("Creating Synthizer context", exc_info=True)
-		self.context = synthizer.Context()
-		self.reverb = synthizer.GlobalFdnReverb(self.context)
-		self.reverb.filter_input.value=synthizer.BiquadConfig.design_identity()
-		self.reverb.gain.value=config.conf['unspoken']['ReverbLevel']
-		self.reverb.mean_free_path.value=0.01
-		self.reverb.t60.value=config.conf['unspoken']['ReverbTime']
-		self.reverb.late_reflections_delay.value=0
+		sound.reverb.filter_input.value=synthizer.BiquadConfig.design_identity()
+		sound.reverb.gain.value=config.conf['unspoken']['ReverbLevel']
+		sound.reverb.mean_free_path.value=0.01
+		sound.reverb.t60.value=config.conf['unspoken']['ReverbTime']
+		sound.reverb.late_reflections_delay.value=0
 #We don't want it changing the volume of sounds that are far away from the listening point (The center of the screen).
 		log.debug("Setting Synthizer context distance model to NONE", exc_info=True)
-		self.context.default_panner_strategy.value=synthizer.PannerStrategy.STEREO if not config.conf['unspoken']['HRTF'] else synthizer.PannerStrategy.HRTF
-		self.context.default_distance_model.value = synthizer.DistanceModel.NONE
+		sound.context.default_panner_strategy.value=synthizer.PannerStrategy.STEREO if not config.conf['unspoken']['HRTF'] else synthizer.PannerStrategy.HRTF
+		sound.context.default_distance_model.value = synthizer.DistanceModel.NONE
 		self.make_sound_objects()
 		# Hook to keep NVDA from announcing roles.
 		self._NVDA_getSpeechTextForProperties = speech.speech.getPropertiesSpeech
@@ -127,10 +125,10 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 		log.debug("Creating Synthizer sound objects", exc_info=True)
 		for key, value in sound_files.items():
 			path = os.path.join(UNSPOKEN_SOUNDS_PATH, value)
-			sound_object = sound.sound3d("3d",self.context)
+			sound_object = sound.sound3d("3d",sound.context)
 			log.debug("Loading "+path, exc_info=True)
 			sound_object.load(path)
-			self.context.config_route(sound_object.source, self.reverb)
+			sound.context.config_route(sound_object.source, sound.reverb)
 			sounds[key] = sound_object
 
 	def shouldNukeRoleSpeech(self):

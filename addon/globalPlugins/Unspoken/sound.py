@@ -193,3 +193,6 @@ class sound3d(object):
 			time.sleep(time_per_fade/1000)
 		self.stop()
 		return True
+
+context = synthizer.Context()
+reverb = synthizer.GlobalFdnReverb(context)
