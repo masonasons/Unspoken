@@ -4,7 +4,7 @@ import config
 import gui
 from gui import settingsDialogs, guiHelper, NVDASettingsDialog
 
-class SettingsPanel(gui.SettingsPanel):
+class SettingsPanel(gui.settingsDialogs.SettingsPanel):
 	title = "Unspoken"
 	def makeSettings(self, settingsSizer):
 		settingsSizer = guiHelper.BoxSizerHelper(self, sizer=settingsSizer)
