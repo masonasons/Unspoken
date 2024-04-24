@@ -19,7 +19,7 @@ addon_info = {
 	# Translators: Long description to be shown for this add-on on add-on information from add-ons manager
 	"addon_description" : _("""Adds 3D audio for controls and replaces control messages. This updated version uses Synthizer and is compatible with NVDA 2024.1."""),
 	# version
-	"addon_version" : "0.9.8",
+	"addon_version" : "0.9.9",
 	# Author(s)
 	"addon_author" : "Camlorn <camlorn38@gmail.com>, Bryan Smart< Bryansmart@bryansmart.com>, Masonasons <mason@masonasons.me>",
 	# URL for the add-on documentation support
