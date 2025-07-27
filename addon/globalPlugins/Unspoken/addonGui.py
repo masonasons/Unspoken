@@ -1,4 +1,3 @@
-from . import sound, synthizer
 import wx
 import config
 import gui
@@ -36,12 +35,37 @@ class SettingsPanel(gui.settingsDialogs.SettingsPanel):
 			return
 		config.conf["unspoken"]["sayAll"] = not self.sayAllCheckBox.IsChecked()
 		config.conf["unspoken"]["speakRoles"] = self.speakRolesCheckBox.IsChecked()
-		sound.context.default_panner_strategy.value=synthizer.PannerStrategy.STEREO if not config.conf['unspoken']['HRTF'] else synthizer.PannerStrategy.HRTF
+		
+		# Import solo quando necessario per evitare import circolari
+		try:
+			from . import sound
+			# Assicurati che Synthizer sia inizializzato prima di usarlo
+			sound.ensure_synthizer_initialized()
+			if sound.context:
+				synthizer = sound.get_synthizer()
+				sound.context.default_panner_strategy.value=synthizer.PannerStrategy.STEREO if not config.conf['unspoken']['HRTF'] else synthizer.PannerStrategy.HRTF
+		except ImportError:
+			pass
+		
 		config.conf["unspoken"]["HRTF"] = self.HRTFCheckBox.IsChecked()
 		config.conf["unspoken"]["Reverb"] = self.ReverbCheckBox.IsChecked()
 		config.conf["unspoken"]["ReverbLevel"] = self.ReverbLevelSlider.GetValue()/100
-		sound.reverb.gain.value=config.conf["unspoken"]["ReverbLevel"]
+		
+		try:
+			from . import sound
+			if sound.reverb:
+				sound.reverb.gain.value=config.conf["unspoken"]["ReverbLevel"]
+		except ImportError:
+			pass
+		
 		config.conf["unspoken"]["ReverbTime"] = self.ReverbTimeSlider.GetValue()/100
-		sound.reverb.t60.value=config.conf["unspoken"]["ReverbTime"]
+		
+		try:
+			from . import sound
+			if sound.reverb:
+				sound.reverb.t60.value=config.conf["unspoken"]["ReverbTime"]
+		except ImportError:
+			pass
+		
 		config.conf["unspoken"]["noSounds"] = not self.noSoundsCheckBox.IsChecked()
 		config.conf["unspoken"]["volumeAdjust"] = self.volumeCheckBox.IsChecked()
