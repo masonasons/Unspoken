@@ -1,8 +1,11 @@
 import time
 import math
 import random
-from . import synthizer
-synthizer.initialize()
+
+_synthizer_initialized = False
+_synthizer_module = None
+context = None
+reverb = None
 #Sound buffer class, for handling synthizer sound buffers.
 class sound_buffer(object):
 	def __init__(self,filename,buffer):
@@ -23,6 +26,7 @@ class sound_buffer_manager(object):
 #Our sound is already loaded into a buffer, so return it.
 				return i.buffer
 #Our sound is not loaded, so load it, add the buffer to the buffers list and return it.
+		synthizer = get_synthizer()
 		tmp=synthizer.Buffer.from_file(filename)
 		self.buffers.append(sound_buffer(filename,tmp))
 		return tmp
@@ -36,6 +40,7 @@ gsbm=sound_buffer_manager()
 #The actual sound3D class.
 class sound3d(object):
 	def __init__(self, type,context):
+		ensure_synthizer_initialized()
 		self.context=context
 		self.type=type
 		self.vol=0
@@ -50,6 +55,7 @@ class sound3d(object):
 	def load(self, filename):
 		if self.handle!=None: self.close()
 		if isinstance(filename, str): # Asume path on disk.
+			synthizer = get_synthizer()
 			self.generator=synthizer.BufferGenerator(self.context)
 			self.buffer=gsbm.buffer(filename)
 			self.length=self.buffer.get_length_in_seconds()
@@ -194,5 +200,20 @@ class sound3d(object):
 		self.stop()
 		return True
 
-context = synthizer.Context()
-reverb = synthizer.GlobalFdnReverb(context)
+def initialize_synthizer():
+	global _synthizer_initialized, _synthizer_module, context, reverb
+	if not _synthizer_initialized:
+		from . import synthizer as _synthizer_module
+		_synthizer_module.initialize()
+		context = _synthizer_module.Context()
+		reverb = _synthizer_module.GlobalFdnReverb(context)
+		_synthizer_initialized = True
+
+def ensure_synthizer_initialized():
+	if not _synthizer_initialized:
+		initialize_synthizer()
+
+def get_synthizer():
+	"""Ottieni il modulo synthizer, inizializzandolo se necessario"""
+	ensure_synthizer_initialized()
+	return _synthizer_module

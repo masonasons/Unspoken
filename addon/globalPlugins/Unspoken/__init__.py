@@ -14,12 +14,48 @@ import speech
 import controlTypes
 from speech.sayAll import SayAllHandler
 from logHandler import log
-from . import addonGui
-log.debug("Initializing Synthizer", exc_info=True)
 from . import sound
 import gui
+import api
+import textInfos
+import wx
 
-from . import synthizer
+def load_synthizer_for_python_version():
+	"""Carica la versione corretta di Synthizer per la versione Python corrente"""
+	python_version = f"{sys.version_info.major}.{sys.version_info.minor}"
+	addon_dir = os.path.dirname(__file__)
+	
+	# Rimuovi eventuali moduli synthizer già caricati per evitare conflitti
+	if 'synthizer' in sys.modules:
+		del sys.modules['synthizer']
+	
+	# Determina quale file .pyd usare
+	if python_version == "3.8":
+		synthizer_file = "synthizer.cp38-win32.pyd"
+	elif python_version == "3.11":
+		synthizer_file = "synthizer.cp311-win32.pyd"
+	else:
+		# Fallback: prova prima 3.11, poi 3.8
+		if os.path.exists(os.path.join(addon_dir, "synthizer.cp311-win32.pyd")):
+			synthizer_file = "synthizer.cp311-win32.pyd"
+		else:
+			synthizer_file = "synthizer.cp38-win32.pyd"
+	
+	synthizer_path = os.path.join(addon_dir, synthizer_file)
+	if not os.path.exists(synthizer_path):
+		log.error(f"Synthizer file not found: {synthizer_path}")
+		raise ImportError(f"Cannot find Synthizer module for Python {python_version}")
+	
+	log.debug(f"Loading Synthizer for Python {python_version}: {synthizer_file}")
+	return synthizer_file
+
+# Carica la versione corretta di Synthizer
+try:
+	load_synthizer_for_python_version()
+	from . import synthizer
+except ImportError as e:
+	log.error(f"Failed to load Synthizer: {e}")
+	raise
 
 UNSPOKEN_ROOT_PATH = os.path.abspath(os.path.dirname(__file__))
 
@@ -82,6 +118,7 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 
 	def __init__(self, *args, **kwargs):
 		super(GlobalPlugin, self).__init__(*args, **kwargs)
+		from . import addonGui
 		gui.settingsDialogs.NVDASettingsDialog.categoryClasses.append(addonGui.SettingsPanel)
 		config.conf.spec["unspoken"]={
 			"sayAll" : "boolean(default=False)",
@@ -93,7 +130,10 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			"ReverbLevel" : "float(default=1.0)",
 			"ReverbTime" : "float(default=0.2)",
 		}
+		log.debug("Initializing Synthizer", exc_info=True)
+		sound.initialize_synthizer()
 		log.debug("Creating Synthizer context", exc_info=True)
+		synthizer = sound.get_synthizer()
 		sound.reverb.filter_input.value=synthizer.BiquadConfig.design_identity()
 		sound.reverb.gain.value=config.conf['unspoken']['ReverbLevel']
 		sound.reverb.mean_free_path.value=0.01
@@ -107,9 +147,17 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 		# Hook to keep NVDA from announcing roles.
 		self._NVDA_getSpeechTextForProperties = speech.speech.getPropertiesSpeech
 		speech.speech.getPropertiesSpeech = self._hook_getSpeechTextForProperties
+		
 		self._previous_mouse_object = None
 		self._last_played_object = None
 		self._last_played_time = 0
+		self._last_navigator_object = None
+		
+		# Timer leggero per controllare la navigazione con frecce
+		self._navigation_timer = wx.Timer()
+		self._navigation_timer.Bind(wx.EVT_TIMER, self._onNavigationTimer)
+		self._navigation_timer.Start(100)  # Controlla ogni 100ms
+		
 		#these are in degrees.
 		self._display_width = 180.0
 		self._display_height_min = -40.0
@@ -141,6 +189,24 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 				kwargs['_role'] = kwargs['role']
 				del kwargs['role']
 		return self._NVDA_getSpeechTextForProperties(reason, *args, **kwargs)
+
+	def _onNavigationTimer(self, event):
+		"""Timer per controllare cambiamenti del navigator object senza bloccare"""
+		try:
+			current_nav = api.getNavigatorObject()
+			if current_nav and current_nav != self._last_navigator_object:
+				self._last_navigator_object = current_nav
+				# Riproduci suono in thread separato per non bloccare
+				import threading
+				def play_async():
+					try:
+						self.play_object(current_nav)
+					except:
+						pass
+				threading.Thread(target=play_async, daemon=True).start()
+		except:
+			# Ignora qualsiasi errore per non interrompere il timer
+			pass
 
 	def _compute_volume(self):
 		if not config.conf["unspoken"]["volumeAdjust"]:
@@ -189,19 +255,40 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			sounds[role].source.gain.value=self._compute_volume()
 			sounds[role].play()
 
-	def event_becomeNavigatorObject(self, obj, nextHandler, isFocus=False):
-		self.play_object(obj)
-		nextHandler()
 
 	def event_gainFocus(self, obj, nextHandler):
-		self.play_object(obj)
+		# Chiama sempre nextHandler per primo per non bloccare la navigazione
 		nextHandler()
+		# Riproduci suono in modo asincrono per non bloccare
+		import threading
+		def play_async():
+			try:
+				self.play_object(obj)
+			except:
+				pass
+		threading.Thread(target=play_async, daemon=True).start()
 
 	def event_mouseMove(self, obj, nextHandler, x, y):
+		# Chiama sempre nextHandler per primo
+		nextHandler()
+		# Gestisci mouse move in thread separato
 		if obj != self._previous_mouse_object:
 			self._previous_mouse_object = obj
-			self.play_object(obj)
-		nextHandler()
+			import threading
+			def play_async():
+				try:
+					self.play_object(obj)
+				except:
+					pass
+			threading.Thread(target=play_async, daemon=True).start()
 
 	def terminate(self):
-		synthizer.shutdown()
+		# Ferma il timer
+		if hasattr(self, '_navigation_timer'):
+			self._navigation_timer.Stop()
+		
+		# Ripristina gli hook originali
+		speech.speech.getPropertiesSpeech = self._NVDA_getSpeechTextForProperties
+		
+		if sound._synthizer_initialized and sound._synthizer_module:
+			sound._synthizer_module.shutdown()
